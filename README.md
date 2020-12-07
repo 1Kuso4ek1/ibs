@@ -3,6 +3,7 @@ IBS is the simple build system
 ## Changelog
 #### 07.12.20
 > Now you can write instruction files for windows and linux.
+
 > Now ibs will ask you to install gcc if you on windows (only manual installation)
 ## Building 
 ```

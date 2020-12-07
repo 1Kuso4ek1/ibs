@@ -1,5 +1,5 @@
 # ibs
-IBS is the simplest build system for linux
+IBS is the simplest build system
 ## Changelog
 #### 07.12.20
 > Now you can write instruction files for windows and linux.

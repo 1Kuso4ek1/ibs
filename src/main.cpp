@@ -38,7 +38,21 @@ void prepare() {
 
 void instructions() {
 	for(int i = 0; i < code.size(); i++) {
-		system(code[i].c_str());
+#ifdef _WIN32
+		if (code[i].find("windows") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
+			for(int j = i + 1; ; j++) {
+				if(code[j] == "}") { i = j; break; }
+				if(code[j] != "{") system(code[j].c_str());
+			}
+		}
+#else
+		if (code[i].find("linux") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
+			for(int j = i + 1; ; j++) {
+				if(code[j] == "}") { i = j; break; }
+				if(code[j] != "{") system(code[j].c_str());
+			}
+		}
+#endif
 	}
 }
 
@@ -47,6 +61,7 @@ void compile() {
 	for(int i = 0; i < files.size(); i++) command += "\"" + files[i] + "\" ";
 	command += " -o \"" + name + "\"";
 	for(int i = 0; i < libs.size(); i++) command += " -l" + libs[i];
+	std::cout << command << std::endl;
 	system(command.c_str());
 }
 
@@ -71,7 +86,13 @@ int main(int argc, char* argv[]) {
 	
 	if(!detect()) {
 		std::cout << "Can't detect GCC compiler! Installing..." << std::endl;
+#ifdef _WIN64
+		std::cout << "To install gcc download this file, follow the instructions, then reboot. Link - ftp://ftp.equation.com/gcc/gcc-10.2.0-64.exe" << std::endl;
+#elifdef _WIN32 
+		std::cout << "To install gcc download this file, follow the instructions, then reboot. Link - ftp://ftp.equation.com/gcc/gcc-10.2.0-32.exe" << std::endl;
+#else
 		system("sudo apt install g++");
+#endif
 	}
 	else std::cout << "GCC compiler detected!" << std::endl;
 	

@@ -1,6 +1,9 @@
 # ibs
 IBS is the simple build system
 ## Changelog
+#### 08.12.20
+> New field "flags"
+
 #### 07.12.20
 > Now you can write instruction files for windows and linux.
 
@@ -37,7 +40,7 @@ sfml-system
 sfml-audio
 }
 ```
-In "files" you can write all your project files, in "name" you can write any word, it will be the name of your program, in libs you can write all libraries, which you use.
+In "files" you can write all your project files, in "name" you can write any word, it will be the name of your program, in libs you can write all libraries, which you use, in "flags" you can write any g++ flag, for example "w" to disable warnings, or "std=c++20" (note: don't write "-", ibs will do it for you).
 ## Instructions file
 Let's open example/libsinstall.ibs
 ```

@@ -61,7 +61,6 @@ void compile() {
 	for(int i = 0; i < files.size(); i++) command += "\"" + files[i] + "\" ";
 	command += " -o \"" + name + "\"";
 	for(int i = 0; i < libs.size(); i++) command += " -l" + libs[i];
-	std::cout << command << std::endl;
 	system(command.c_str());
 }
 

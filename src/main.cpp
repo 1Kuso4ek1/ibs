@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 
-std::vector<std::string> files, libs, code;
+std::vector<std::string> files, libs, code, flags;
 std::string name;
 
 bool detect() {
@@ -16,20 +16,26 @@ bool detect() {
 void prepare() {
 	for(int i = 0; i < code.size(); i++) {
 		if (code[i].find("files") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
-			for(int j = i + 1; ; j++) {
-				if(code[j] == "}") { i = j; break; }
+			for(int j = i + 1; ; j++, i++) {
+				if(code[j] == "}") break;
 				if(code[j] != "{") files.push_back(code[j]);
 			}
 		}
 		if (code[i].find("libs") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
 			for(int j = i + 1; ; j++) {
-				if(code[j] == "}") { i = j; break; }
+				if(code[j] == "}") break;
 				if(code[j] != "{") libs.push_back(code[j]);
+			}
+		}
+		if (code[i].find("flags") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
+			for(int j = i + 1; ; j++) {
+				if(code[j] == "}") break;
+				if(code[j] != "{") flags.push_back(code[j]);
 			}
 		}
 		if (code[i].find("name") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
 			for(int j = i + 1; ; j++) {
-				if(code[j] == "}") { i = j; break; }
+				if(code[j] == "}") break;
 				if(code[j] != "{") name = code[j];
 			}
 		}
@@ -58,6 +64,7 @@ void instructions() {
 
 void compile() {
 	std::string command = "g++ ";
+	for(int i = 0; i < flags.size(); i++) command += "-" + flags[i] + " ";
 	for(int i = 0; i < files.size(); i++) command += "\"" + files[i] + "\" ";
 	command += " -o \"" + name + "\"";
 	for(int i = 0; i < libs.size(); i++) command += " -l" + libs[i];

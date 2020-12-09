@@ -87,11 +87,11 @@ bool readfile(std::string filename) {
 }
 
 int main(int argc, char* argv[]) {
-	if(argv[1] == nullptr) { std::cout << "Error: Empty arguments!" << std::endl; exit(-1); }
-	std::cout << "Detecting GCC compiler..." << std::endl;
+	if(argv[1] == nullptr) { std::cout << "\033[31mError: Empty arguments!\033[0m" << std::endl; exit(-1); }
+	std::cout << "\033[1m\033[35mDetecting GCC compiler...\033[0m" << std::endl;
 	
 	if(!detect()) {
-		std::cout << "Can't detect GCC compiler! Installing..." << std::endl;
+		std::cout << "\033[31mCan't detect GCC compiler!\033[0m \033[32mInstalling...\033[0m" << std::endl;
 #ifdef _WIN64
 		std::cout << "To install gcc download this file, follow the instructions, then reboot. Link - ftp://ftp.equation.com/gcc/gcc-10.2.0-64.exe" << std::endl;
 #elifdef _WIN32 
@@ -100,22 +100,24 @@ int main(int argc, char* argv[]) {
 		system("sudo apt install g++");
 #endif
 	}
-	else std::cout << "GCC compiler detected!" << std::endl;
+	else std::cout << "\033[32mGCC compiler detected!\033[0m" << std::endl;
 	
 	if(argv[2] != nullptr) {
-		std::cout << "Reading instructions file \"" << argv[2] << "\"..." << std::endl;
-		if(!readfile(argv[2])) { std::cout << "Error: Can't open file!" << std::endl; exit(-1); }
-		std::cout << "Executing commands..." << std::endl;
+		std::cout << "\033[1m\033[35mReading instructions file \"" << argv[2] << "\"...\033[0m" << std::endl;
+		if(!readfile(argv[2])) { std::cout << "\033[31mError: Can't open file!\033[0m" << std::endl; exit(-1); }
+		std::cout << "\033[1m\033[35mExecuting commands...\033[0m" << std::endl;
 		instructions();
 	}
-	std::cout << "Reading build file \"" << argv[1] << "\"..." << std::endl;
+	std::cout << "\033[1m\033[35mReading build file \"" << argv[1] << "\"...\033[0m" << std::endl;
 	
-	if(!readfile(argv[1])) { std::cout << "Error: Can't open file!" << std::endl; exit(-1); }
-	else std::cout << "Success!" << std::endl;
+	if(!readfile(argv[1])) { std::cout << "\033[31mError: Can't open file!\033[0m" << std::endl; exit(-1); }
+	else std::cout << "\033[32mSuccess!\033[0m" << std::endl;
 	
-	std::cout << "Preparation..." << std::endl;
+	std::cout << "\033[1m\033[35mPreparation...\033[0m" << std::endl;
 	prepare();
 	
-	std::cout << "Compiling..." << std::endl;
+	std::cout << "\033[1m\033[35mCompiling...\033[0m" << std::endl;
 	compile();
+	
+	std::cout << "\033[32mCompilation finished!\033[0m" << std::endl;
 }

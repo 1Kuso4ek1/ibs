@@ -1,6 +1,9 @@
 # ibs
 IBS is the simple build system
 ## Changelog
+#### 09.12.20
+> Colored text!
+
 #### 08.12.20
 > New field "flags"
 

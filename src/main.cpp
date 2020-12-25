@@ -63,10 +63,28 @@ void instructions() {
 }
 
 void compile() {
-	std::string command = "g++ ";
+	std::string command = "g++ -c ";
 	for(int i = 0; i < flags.size(); i++) command += "-" + flags[i] + " ";
 	for(int i = 0; i < files.size(); i++) command += "\"" + files[i] + "\" ";
-	command += " -o \"" + name + "\"";
+	for(int i = 0; i < libs.size(); i++) command += " -l" + libs[i];
+	system(command.c_str());
+}
+
+void build() {
+	std::string command = "g++ ";
+	command += "-o \"" + name + "\" ";
+	for(int i = 0; i < flags.size(); i++) command += "-" + flags[i] + " ";
+	for(int i = 0; i < files.size(); i++) {
+		if(files[i].find(".h") != std::string::npos)
+			if(files[i].find("/") != std::string::npos)
+				command += "\"" + files[i].substr(files[i].find("/") + 1, files[i].size()) + ".gch" + "\" ";
+			else
+				command += "\"" + files[i] + ".gch" + "\" ";
+		else if(files[i].find("/") != std::string::npos)
+			command += "\"" + (files[i].substr(files[i].find("/") + 1, files[i].find(".") - 3) + "o") + "\" ";
+		else 
+			command += "\"" + (files[i].substr(0, files[i].find(".") + 1) + "o") + "\" ";
+	}
 	for(int i = 0; i < libs.size(); i++) command += " -l" + libs[i];
 	system(command.c_str());
 }
@@ -118,6 +136,7 @@ int main(int argc, char* argv[]) {
 	
 	std::cout << "\033[1m\033[35mCompiling...\033[0m" << std::endl;
 	compile();
-	
+	build();
+
 	std::cout << "\033[32mCompilation finished!\033[0m" << std::endl;
 }

@@ -1,6 +1,9 @@
 # ibs
 IBS is the simple build system
 ## Changelog
+#### 25.12.20
+> Compiling to .o and .gch files
+
 #### 09.12.20
 > Colored text!
 

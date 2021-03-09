@@ -71,13 +71,20 @@ void compile() {
 }
 
 void build() {
+	for(int i = 0; i < files.size(); i++)
+	{
+		if(files[i].find("/") != std::string::npos)
+		{
+			files[i] = files[i].substr(files[i].find("/") + 1, files[i].size());
+		}
+	}
 	std::string command = "g++ ";
 	command += "-o \"" + name + "\" ";
 	for(int i = 0; i < flags.size(); i++) command += "-" + flags[i] + " ";
 	for(int i = 0; i < files.size(); i++) {
 		if(files[i].find(".h") != std::string::npos)
 			command += "\"" + files[i] + ".gch" + "\" ";
-		else
+		else 
 			command += "\"" + (files[i].substr(0, files[i].find(".") + 1) + "o") + "\" ";
 	}
 	for(int i = 0; i < libs.size(); i++) command += " -l" + libs[i];
@@ -107,7 +114,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "\033[31mCan't detect GCC compiler!\033[0m \033[32mInstalling...\033[0m" << std::endl;
 #ifdef _WIN64
 		std::cout << "To install gcc download this file, follow the instructions, then reboot. Link - ftp://ftp.equation.com/gcc/gcc-10.2.0-64.exe" << std::endl;
-#elif _WIN32 
+#elifdef _WIN32 
 		std::cout << "To install gcc download this file, follow the instructions, then reboot. Link - ftp://ftp.equation.com/gcc/gcc-10.2.0-32.exe" << std::endl;
 #else
 		system("sudo apt install g++");

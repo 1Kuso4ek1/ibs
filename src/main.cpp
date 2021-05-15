@@ -1,8 +1,11 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <map>
+#include <cstring>
 
 std::vector<std::string> files, libs, code, flags;
+std::map<std::string, std::string> vars;
 std::string name;
 
 bool detect() {
@@ -12,9 +15,30 @@ bool detect() {
 	return false;
 #endif	
 }
-
+void readvars()
+{
+	for(int i = 0; i < code.size(); i++) {
+		if (code[i].find("vars") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
+			for(int j = i + 1; ; j++, i++) {
+				if(code[j] == "}") break;
+				if(code[j] != "{")
+					if(code[j].find(" ") != std::string::npos) vars.emplace(std::make_pair(code[j].substr(0, code[j].find(" ")), code[j].substr(code[j].find(" ") + 1, code[j].size() - 1)));
+					else vars.emplace(std::make_pair(code[j], ""));
+			}
+		}
+	}
+}
 void prepare() {
 	for(int i = 0; i < code.size(); i++) {
+		for(int i = 0; i < code.size(); i++) {
+			for(auto& j : vars)
+			{
+				if (code[i].find(j.first) != std::string::npos)
+				{
+						code[i].replace(code[i].find(j.first), j.first.size(), j.second);
+				}
+			}
+		}
 		if (code[i].find("files") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
 			for(int j = i + 1; ; j++, i++) {
 				if(code[j] == "}") break;
@@ -22,19 +46,19 @@ void prepare() {
 			}
 		}
 		if (code[i].find("libs") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
-			for(int j = i + 1; ; j++) {
+			for(int j = i + 1; ; j++, i++) {
 				if(code[j] == "}") break;
 				if(code[j] != "{") libs.push_back(code[j]);
 			}
 		}
 		if (code[i].find("flags") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
-			for(int j = i + 1; ; j++) {
+			for(int j = i + 1; ; j++, i++) {
 				if(code[j] == "}") break;
 				if(code[j] != "{") flags.push_back(code[j]);
 			}
 		}
 		if (code[i].find("name") != std::string::npos && (code[i + 1] == "{" || code[i].find("{") != std::string::npos)) {
-			for(int j = i + 1; ; j++) {
+			for(int j = i + 1; ; j++, i++) {
 				if(code[j] == "}") break;
 				if(code[j] != "{") name = code[j];
 			}
@@ -107,7 +131,20 @@ bool readfile(std::string filename) {
 }
 
 int main(int argc, char* argv[]) {
-	if(argv[1] == nullptr) { std::cout << "\033[31mError: Empty arguments!\033[0m" << std::endl; exit(-1); }
+	if(strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)
+	{
+		std::cout << "Usage: ibs [option] build_file_path *instructions file path* -*vars_values*" << std::endl;
+		std::cout << "Options:" << std::endl;
+        std::cout << "-h  --help - Display this information" << std::endl;
+        std::cout << "-v  --version - Display version information" << std::endl;
+        exit(0);
+	}
+	if(strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0)
+	{
+		std::cout << "ibs 1.1.0\n\nThis is free software. There is NO warranty;\nnot even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE." << std::endl;
+		exit(0);
+	}
+	if(argv[1] == nullptr) { std::cout << "\033[31mError: File path not specified!\033[0m" << std::endl; exit(-1); }
 	std::cout << "\033[1m\033[35mDetecting GCC compiler...\033[0m" << std::endl;
 	
 	if(!detect()) {
@@ -123,10 +160,13 @@ int main(int argc, char* argv[]) {
 	else std::cout << "\033[32mGCC compiler detected!\033[0m" << std::endl;
 	
 	if(argv[2] != nullptr) {
-		std::cout << "\033[1m\033[35mReading instructions file \"" << argv[2] << "\"...\033[0m" << std::endl;
-		if(!readfile(argv[2])) { std::cout << "\033[31mError: Can't open file!\033[0m" << std::endl; exit(-1); }
-		std::cout << "\033[1m\033[35mExecuting commands...\033[0m" << std::endl;
-		instructions();
+		if(argv[2][0] != '-')
+		{
+			std::cout << "\033[1m\033[35mReading instructions file \"" << argv[2] << "\"...\033[0m" << std::endl;
+			if(!readfile(argv[2])) { std::cout << "\033[31mError: Can't open file!\033[0m" << std::endl; exit(-1); }
+			std::cout << "\033[1m\033[35mExecuting commands...\033[0m" << std::endl;
+			instructions();
+		}
 	}
 	std::cout << "\033[1m\033[35mReading build file \"" << argv[1] << "\"...\033[0m" << std::endl;
 	
@@ -134,6 +174,19 @@ int main(int argc, char* argv[]) {
 	else std::cout << "\033[32mSuccess!\033[0m" << std::endl;
 	
 	std::cout << "\033[1m\033[35mPreparation...\033[0m" << std::endl;
+	readvars();
+	for(auto& i : vars)
+	{
+		if(argv[2] != nullptr)
+		{
+			int notinit = (argv[2][0] == '-') ? 0 : 1;
+			if(i.second == "")
+			{
+				i.second = ((argv[2 + notinit] == nullptr) ? "" : argv[2 + notinit]);
+				if(i.second.find("-") != std::string::npos) i.second.erase(i.second.begin());
+			}
+		}
+	}
 	prepare();
 	
 	std::cout << "\033[1m\033[35mCompiling...\033[0m" << std::endl;

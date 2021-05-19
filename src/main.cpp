@@ -5,7 +5,7 @@
 #include <cstring>
 
 std::vector<std::string> files, libs, code, flags;
-std::map<std::string, std::string> vars;
+std::vector<std::pair<std::string, std::string>> vars;
 std::string name;
 
 bool detect() {
@@ -22,8 +22,8 @@ void readvars()
 			for(int j = i + 1; ; j++, i++) {
 				if(code[j] == "}") break;
 				if(code[j] != "{")
-					if(code[j].find(" ") != std::string::npos) vars.emplace(std::make_pair(code[j].substr(0, code[j].find(" ")), code[j].substr(code[j].find(" ") + 1, code[j].size() - 1)));
-					else vars.emplace(std::make_pair(code[j], ""));
+					if(code[j].find(" ") != std::string::npos) vars.emplace_back(std::make_pair(code[j].substr(0, code[j].find(" ")), code[j].substr(code[j].find(" ") + 1, code[j].size() - 1)));
+					else vars.emplace_back(std::make_pair(code[j], ""));
 			}
 		}
 	}
@@ -35,7 +35,7 @@ void prepare() {
 			{
 				if (code[i].find(j.first) != std::string::npos)
 				{
-						code[i].replace(code[i].find(j.first), j.first.size(), j.second);
+					code[i].replace(code[i].find(j.first), j.first.size(), j.second);
 				}
 			}
 		}
@@ -175,15 +175,16 @@ int main(int argc, char* argv[]) {
 	
 	std::cout << "\033[1m\033[35mPreparation...\033[0m" << std::endl;
 	readvars();
-	for(auto& i : vars)
+	if(argv[2] != nullptr)
 	{
-		if(argv[2] != nullptr)
+		int notinit = (argv[2][0] == '-') ? 0 : 1;	
+		for(auto& i : vars)
 		{
-			int notinit = (argv[2][0] == '-') ? 0 : 1;
 			if(i.second == "")
 			{
-				i.second = ((argv[2 + notinit] == nullptr) ? "" : argv[2 + notinit]);
+				i.second = ((argv[(2 + notinit)] == nullptr) ? "" : argv[(2 + notinit)]);
 				if(i.second.find("-") != std::string::npos) i.second.erase(i.second.begin());
+				notinit++;
 			}
 		}
 	}

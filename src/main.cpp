@@ -1,10 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <map>
+#include <functional>
 #include <cstring>
+#include <unordered_map>
+#include <algorithm>
 
-std::vector<std::string> files, libs, code, flags;
+std::vector<std::string> files, ofiles, libs, code, flags, cpfiles;
 std::vector<std::pair<std::string, std::string>> vars;
 std::string name;
 
@@ -15,6 +17,17 @@ bool detect() {
 	return false;
 #endif	
 }
+
+void toofiles()
+{
+	for(auto& i : files) {
+		if(i.find(".h") != std::string::npos)
+			ofiles.push_back(std::string(i + ".gch"));
+		else 
+			ofiles.push_back(std::string((i.substr(0, i.find(".") + 1) + "o")));
+	}
+}
+
 void readvars()
 {
 	for(int i = 0; i < code.size(); i++) {
@@ -28,6 +41,7 @@ void readvars()
 		}
 	}
 }
+
 void prepare() {
 	for(int i = 0; i < code.size(); i++) {
 		for(int i = 0; i < code.size(); i++) {
@@ -95,23 +109,15 @@ void compile() {
 }
 
 void build() {
-	for(int i = 0; i < files.size(); i++)
+	for(auto& i : ofiles)
 	{
-		if(files[i].find("/") != std::string::npos)
-		{
-			files[i] = files[i].substr(files[i].find_last_of("/") + 1, files[i].size());
-		}
+		if(i.find("/") != std::string::npos) i = i.substr(i.find_last_of("/") + 1, i.size());
 	}
 	std::string command = "g++ ";
 	command += "-o \"" + name + "\" ";
-	for(int i = 0; i < flags.size(); i++) command += "-" + flags[i] + " ";
-	for(int i = 0; i < files.size(); i++) {
-		if(files[i].find(".h") != std::string::npos)
-			command += "\"" + files[i] + ".gch" + "\" ";
-		else 
-			command += "\"" + (files[i].substr(0, files[i].find(".") + 1) + "o") + "\" ";
-	}
-	for(int i = 0; i < libs.size(); i++) command += " -l" + libs[i];
+	for(auto& i : flags) command += "-" + i + " ";
+	for(auto& i : ofiles) command += "\"" + i + "\" ";
+	for(auto& i : libs) command += " -l" + i;
 	system(command.c_str());
 }
 
@@ -130,6 +136,37 @@ bool readfile(std::string filename) {
 	return true;
 }
 
+size_t filehash(std::string filename)
+{
+	std::ifstream tmp(filename);
+	if(!tmp.is_open()) return 0;
+	std::string data, rdata;
+	while(std::getline(tmp, rdata)) data += rdata;
+	return std::hash<std::string>{}(data);
+}
+
+void writecache(std::string name)
+{
+	std::ofstream cache(name + "cache");
+	for(auto& i : cpfiles) cache << i << " " << filehash(i) << std::endl;
+}
+
+void readcache(std::string name)
+{
+	std::string tmp;
+	std::unordered_map<std::string, size_t> cfiles;
+	std::ifstream cache(name + "cache");
+	while(std::getline(cache, tmp)) cfiles[tmp.substr(0, tmp.find(" "))] = stoull(tmp.substr(tmp.find(" ") + 1, tmp.size()));
+	for(auto& i : cpfiles)
+	{
+		if(cfiles[i] == filehash(i)) 
+		{
+			std::cout << "\e[1;33mSkipping file " << i << "\e[0m" << std::endl;
+			files.erase(std::find(files.begin(), files.end(), i));
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 	if(strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)
 	{
@@ -141,7 +178,7 @@ int main(int argc, char* argv[]) {
 	}
 	if(strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0)
 	{
-		std::cout << "ibs 1.1.0\n\nThis is free software. There is NO warranty;\nnot even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE." << std::endl;
+		std::cout << "ibs 2.0.0\n\nThis is free software. There is NO warranty;\nnot even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE." << std::endl;
 		exit(0);
 	}
 	if(argv[1] == nullptr) { std::cout << "\033[31mError: File path not specified!\033[0m" << std::endl; exit(-1); }
@@ -151,7 +188,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "\033[31mCan't detect GCC compiler!\033[0m \033[32mInstalling...\033[0m" << std::endl;
 #ifdef _WIN64
 		std::cout << "To install gcc download this file, follow the instructions, then reboot. Link - ftp://ftp.equation.com/gcc/gcc-10.2.0-64.exe" << std::endl;
-#elifdef _WIN32 
+#elif defined(_WIN32)
 		std::cout << "To install gcc download this file, follow the instructions, then reboot. Link - ftp://ftp.equation.com/gcc/gcc-10.2.0-32.exe" << std::endl;
 #else
 		system("sudo apt install g++");
@@ -189,10 +226,17 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	prepare();
-	
+	cpfiles = files;
+	toofiles();
+	if(std::ifstream(std::string(argv[1]) + std::string("cache")).is_open())
+	{
+		std::cout << "\033[1m\033[35mReading cache file \"" << std::string(argv[1]) << "cache" << "\"...\033[0m" << std::endl;
+		readcache(argv[1]);
+	}
 	std::cout << "\033[1m\033[35mCompiling...\033[0m" << std::endl;
 	compile();
 	build();
+	writecache(argv[1]);
 
 	std::cout << "\033[32mCompilation finished!\033[0m" << std::endl;
 }
